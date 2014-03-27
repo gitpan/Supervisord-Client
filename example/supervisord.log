@@ -1,0 +1,6 @@
+2014-03-27 02:22:02,962 INFO RPC interface 'supervisor' initialized
+2014-03-27 02:22:02,962 CRIT Server 'unix_http_server' running without any HTTP authentication checking
+2014-03-27 02:22:02,964 INFO daemonizing the supervisord process
+2014-03-27 02:22:02,965 INFO supervisord started with pid 16824
+2014-03-27 02:22:03,969 INFO spawned: 'print_and_sleep' with pid 16835
+2014-03-27 02:22:04,981 INFO success: print_and_sleep entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
