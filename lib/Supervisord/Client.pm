@@ -1,6 +1,6 @@
 package Supervisord::Client;
 {
-  $Supervisord::Client::VERSION = '0.1_01';
+  $Supervisord::Client::VERSION = '0.1_02';
 }
 use strict;
 use warnings;
@@ -10,6 +10,7 @@ use Moo::Lax;
 use Carp;
 use Safe::Isa;
 use Config::INI::Reader;
+use URI;
 
 LWP::Protocol::implementor(
     supervisorsocketunix => 'LWP::Protocol::http::SocketUnixAlt' );
@@ -24,8 +25,22 @@ has serverurl => (
     required => 0,
 );
 
-has rpc        => ( is => 'lazy' );
+has rpc => (
+    is      => 'lazy',
+    handles => { ua => 'useragent' },
+);
 has _serverurl => ( is => 'lazy' );
+
+has username => (
+    is => 'ro',
+    required => 0,
+);
+
+has password => (
+    is => 'ro',
+    required => 0,
+);
+
 
 sub _build__serverurl {
     my $self = shift;
@@ -40,9 +55,20 @@ sub _build__serverurl {
 sub _build_rpc {
     my $self = shift;
     my $url  = $self->_serverurl;
-    $url =~ s|unix://|supervisorsocketunix:|g;
-    $url .= "//RPC2";
-    my $cli = RPC::XML::Client->new($url);
+    my $uri = URI->new( $url );
+    if( lc($uri->scheme) eq 'unix' ) {
+        my $socket_uri = URI->new("supervisorsocketunix:");
+        $socket_uri->path_segments( $uri->path_segments, "", "RPC2" );
+        $uri = $socket_uri;
+    } else {
+        $uri->path_segments( $uri->path_segments, "RPC2" );
+    }
+    my $cli = RPC::XML::Client->new( $uri );
+    my $ua = $cli->useragent;
+    if( $self->username ) {
+        $ua->credentials( $uri->host_port, 'default', $self->username, $self->password );
+    }
+    return $cli;
 }
 
 sub BUILD {
@@ -64,6 +90,7 @@ sub send_rpc_request {
     my( $self, @params ) = @_;
     my $ret = $self->rpc->send_request( @params );
     return $ret->value if $ret->$_can("value");
+    return $ret;
 }
 
 1;
@@ -76,18 +103,19 @@ Supervisord::Client - a perl client for Supervisord's XMLRPC.
 
     my $client = Supervisord::Client->new( serverurl => "unix:///tmp/socky.sock" );
     #or
-    my $client = Supervisord::Client->new( path_to_supervisor_config => "/etc/supervisor/supervisor.conf" );
-    warn $_->{description} for(@{ client->getAllProcessInfo });
+    my $client = Supervisord::Client->new( serverurl => "http://foo.bar:25123" );
     #or
-    warn $_->{description} for(@{ client->send_rpc_request("supervisor.getAllProcessInfo") });
+    my $client = Supervisord::Client->new( path_to_supervisor_config => "/etc/supervisor/supervisor.conf" );
+    warn $_->{description} for(@{ $client->getAllProcessInfo });
+    #or
+    warn $_->{description} for(@{ $client->send_rpc_request("supervisor.getAllProcessInfo") });
 
 =head1 DESCRIPTION
 
 This module is for people who are using supervisord (  L<http://supervisord.org/> ) to manage their daemons,
-and are using the unix socket form of the RPC ( as opposed to http server ).
-This module will work with either, but really you're not getting much vs RPC::XML::Client for the http version;
-the http over Unix socket part is where this module comes in handy.
-See L<http://supervisord.org/api.html> for the API docs.
+and ran into problems with the http over Unix socket part.
+
+See L<http://supervisord.org/api.html> for the API docs of what the supervisord XMLRPC supports.
 
 =head1 METHODS
 
@@ -99,13 +127,20 @@ Constructor, provided by Moo.
 
 Access to the RPC::XML::Client object.
 
+=item ua
+
+Access to the LWP::UserAgent object from the RPC::XML::Client
+
 =head2 send_rpc_request( remote_method, @params )
+
 
 =head2 AUTOLOAD
 
 This module uses AUTOLOAD to proxy calls to send_rpc_request. See synopsis for examples.
 
 =head1 CONSTRUCTOR PARAMETERS
+
+path_to_supervisor_config or serverurl is required.
 
 =over
 
@@ -115,9 +150,9 @@ optional - ex: /tmp/super.sock
 
 =item serverurl
 
-optional - in supervisor format, ex: unix:///tmp.super.sock
+    optional - in supervisor format, ex: unix:///tmp.super.sock | http://myserver.local:8080
 
-One of the two is required.
+
 
 =back
 

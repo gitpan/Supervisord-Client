@@ -17,12 +17,14 @@ meta-spec:
   version: 1.4
 name: Supervisord-Client
 requires:
+  Carp: 0
   Config::INI::Reader: 0
   LWP::Protocol::http::SocketUnixAlt: 0
   Moo::Lax: 0
   RPC::XML::Client: 0
   Safe::Isa: 0
+  URI: 0
 resources:
   bugtracker: https://github.com/ediblenergy/Supervisord-Client/issues
   repository: https://github.com/ediblenergy/Supervisord-Client.git
-version: 0.1_01
+version: 0.1_02
