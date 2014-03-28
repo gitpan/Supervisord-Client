@@ -9,5 +9,6 @@ example/ctl.pl
 example/print_and_sleep.sh
 example/supervisor.conf
 lib/Supervisord/Client.pm
+lib/URI/supervisorsocketunix.pm
 t/00-compile.t
 t/basic.t

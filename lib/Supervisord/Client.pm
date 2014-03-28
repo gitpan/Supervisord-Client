@@ -1,6 +1,6 @@
 package Supervisord::Client;
 {
-  $Supervisord::Client::VERSION = '0.2';
+  $Supervisord::Client::VERSION = '0.21';
 }
 use strict;
 use warnings;
@@ -55,7 +55,8 @@ sub _build_rpc {
     my $uri = URI->new( $url );
     if( lc($uri->scheme) eq 'unix' ) {
         my $socket_uri = URI->new("supervisorsocketunix:");
-        $socket_uri->path_segments( $uri->path_segments, "", "RPC2" );
+        my @old_segments = grep { $_ } $uri->path_segments;
+        $socket_uri->path_segments( @old_segments, "", "RPC2" );
         $uri = $socket_uri;
     } else {
         $uri->path_segments( $uri->path_segments, "RPC2" );

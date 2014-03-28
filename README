@@ -1,7 +1,7 @@
 
 
 This archive contains the distribution Supervisord-Client,
-version 0.2:
+version 0.21:
 
   a perl client for Supervisord's XMLRPC.
 

@@ -27,4 +27,4 @@ requires:
 resources:
   bugtracker: https://github.com/ediblenergy/Supervisord-Client/issues
   repository: https://github.com/ediblenergy/Supervisord-Client.git
-version: 0.2
+version: 0.21
