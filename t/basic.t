@@ -1,11 +1,11 @@
 use strict;
 use warnings;
 use Test::More;
+plan tests => 4;
 use Supervisord::Client;
 use FindBin;
 use File::Spec;
 use File::Temp;
-
 
 my $sock_file_path = File::Temp::tmpnam;
 my $tmp_fh = File::Temp->new;
@@ -43,4 +43,5 @@ ok my $client =
   Supervisord::Client->new( path_to_supervisor_config => $tmp_fh->filename ), "spawned the client";
 ok $client->rpc, 'created the rpc';
 is $client->serverurl, "unix://$sock_file_path", "correctly grabbed the socket path";
+ok $client->ua->isa("LWP::UserAgent"),"->ua parameter works";
 done_testing;

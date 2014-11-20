@@ -1,11 +1,9 @@
 package Supervisord::Client;
-{
-  $Supervisord::Client::VERSION = '0.21';
-}
+$Supervisord::Client::VERSION = '0.22';
 use strict;
 use warnings;
 use LWP::Protocol::http::SocketUnixAlt;
-use RPC::XML::Client;
+use RPC::XML::Client qw[ $RPC::XML::ERROR ];
 use Moo::Lax;
 use Carp;
 use Safe::Isa;
@@ -55,13 +53,13 @@ sub _build_rpc {
     my $uri = URI->new( $url );
     if( lc($uri->scheme) eq 'unix' ) {
         my $socket_uri = URI->new("supervisorsocketunix:");
-        my @old_segments = grep { $_ } $uri->path_segments;
-        $socket_uri->path_segments( @old_segments, "", "RPC2" );
+        $socket_uri->path_segments( $uri->path_segments, "", "RPC2" );
         $uri = $socket_uri;
     } else {
         $uri->path_segments( $uri->path_segments, "RPC2" );
     }
-    my $cli = RPC::XML::Client->new( $uri );
+    my $cli =
+      RPC::XML::Client->new( $uri, error_handler => sub { confess @_ } );
     my $ua = $cli->useragent;
     if( $self->username ) {
         $ua->credentials( $uri->host_port, 'default', $self->username, $self->password );
